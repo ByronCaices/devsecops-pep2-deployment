@@ -1,0 +1,6 @@
+[submodule "devsecops-prestabanco-backend"]
+	path = devsecops-prestabanco-backend
+	url = https://github.com/ByronCaices/devsecops-prestabanco-backend
+[submodule "devsecops-prestabanco-frontend"]
+	path = devsecops-prestabanco-frontend
+	url = https://github.com/ByronCaices/devsecops-prestabanco-frontend
