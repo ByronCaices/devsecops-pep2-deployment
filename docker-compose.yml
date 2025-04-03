@@ -1,0 +1,93 @@
+services:
+  # ======================
+  # POSTGRES
+  # ======================
+  postgres:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - "5435:5435"
+    networks:
+      - mynet
+
+  # ======================
+  # PGADMIN
+  # ======================
+  pgadmin4:
+    image: elestio/pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PDADMIN_USER}
+      PGADMIN_DEFAULT_PASSWORD: ${PDADMIN_PASSWORD}
+      PGADMIN_LISTEN_PORT: 8084
+    ports:
+      - "8084:8084"   # Ojo con el puerto
+    volumes:
+      - ./servers.json:/pgadmin4/servers.json
+    networks:
+      - mynet
+
+  # ======================
+  # BACKEND (Spring Boot)
+  # ======================
+  backend:
+    build:
+      context: ./devsecops-prestabanco-backend/ # Ruta donde tengas tu Dockerfile y tu código
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "8090:8090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      # Ajusta si tu aplicación requiere otras variables
+    depends_on:
+      - postgres
+    networks:
+      - mynet
+
+  # ======================
+  # FRONTEND (Vite/React)
+  # ======================
+  frontend:
+    build:
+      context: ./devsecops-prestabanco-frontend  # Carpeta donde tengas el package.json y tu React
+      dockerfile: Dockerfile.front
+    container_name: frontend
+    # Se asume que en Dockerfile.front expones el puerto 80 (Nginx) o el 5173 (Vite dev).
+    # Este ejemplo asume un build final con Nginx en el puerto 80 interno.
+    ports:
+      - "3000:80"
+    networks:
+      - mynet
+
+  # ======================
+  # JENKINS
+  # ======================
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    user: root
+    privileged: true
+    ports:
+      - "8082:8080"      # Jenkins UI por http://localhost:8082
+      - "50000:50000"    # Puerto para agentes Jenkins
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - mynet
+
+networks:
+  mynet:
+    driver: bridge
+
+volumes:
+  jenkins_home:
