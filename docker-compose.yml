@@ -61,7 +61,7 @@ services:
     build:
       context: ./devsecops-prestabanco-frontend  # Carpeta donde tengas el package.json y tu React
       dockerfile: Dockerfile.front
-    container_name: frontend
+    #container_name: frontend
     # Se asume que en Dockerfile.front expones el puerto 80 (Nginx) o el 5173 (Vite dev).
     # Este ejemplo asume un build final con Nginx en el puerto 80 interno.
     ports:
@@ -82,6 +82,7 @@ services:
       - "50000:50000"    # Puerto para agentes Jenkins
     volumes:
       - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock # Para que Jenkins pueda usar Docker
     networks:
       - mynet
 
