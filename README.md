@@ -6,7 +6,7 @@
 Clona el repositorio principal junto con sus submódulos ejecutando:
 
 ```bash
-git clone --recurse-submodules https://github.com/usuario/repositorio.git
+git clone --recurse-submodules https://github.com/ByronCaices/devsecops-pep1-deployment.git
 ```
 
 ---
