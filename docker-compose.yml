@@ -86,6 +86,19 @@ services:
     networks:
       - mynet
 
+  # ======================
+  # SONARQUBE
+  # ======================
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    networks:
+      - mynet
+
 networks:
   mynet:
     driver: bridge
