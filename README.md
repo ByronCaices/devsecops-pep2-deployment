@@ -1,4 +1,3 @@
-
 # 🛠️ Guía de Configuración del Proyecto
 
 ## 📥 1. Clonar el repositorio con sus submódulos
@@ -107,4 +106,101 @@ Puedes crear las credenciales que desees, pero asegúrate de recordarlas.
     Como el pipeline se ejecuta cada 5 minutos, solo deberás esperar a que se active automáticamente y verifiques que se despliegue correctamente.
     
 
+## 🟦 9. Integración de SonarQube en Frontend
+
+### 9.1 Levantar el contenedor de SonarQube
+
+```bash
+docker compose up -d sonarqube
+```
+
 ---
+
+### 9.2 Configurar SonarQube (primer acceso y token)
+
+```bash
+# Abrir en el navegador
+http://localhost:9000
+```
+
+- Usuario: `admin`
+- Contraseña: `admin`
+- Cambia la contraseña cuando lo solicite
+- Ve a **My Account > Security** y genera un token.
+- Guarda este token para Jenkins.
+
+---
+
+### 9.3 Agregar el token de SonarQube en Jenkins
+
+```bash
+# En Jenkins: Manage Jenkins > Manage Credentials > (global) > Add Credentials
+# Tipo: Secret text
+# ID: sonarqube-token
+# Secret: <pega el token generado en sonarqube>
+```
+
+---
+
+### 9.4 Configurar SonarQube en Jenkins
+
+```bash
+# En Jenkins: Manage Jenkins > Manage Plugins
+# Instala el plugin: SonarQube Scanner
+
+# En Jenkins: Manage Jenkins > Configure System
+# Sección: SonarQube servers
+# Name: sonarqube local
+# Server URL: http://sonarqube:9000
+# Server authentication token: selecciona el token creado
+# Guarda los cambios
+```
+
+---
+
+### 9.5 Configurar NodeJS en Jenkins
+
+```bash
+# En Jenkins: Manage Jenkins > Global Tool Configuration
+# Sección: NodeJS
+# Name: nodejs
+# Marca "Install automatically"
+# Guarda los cambios
+```
+
+---
+
+### 9.6 Agregar el análisis SonarQube al Jenkinsfile
+
+En la configuración del pipeline, en la sección de "pipeline script" se debe copiar el Jenkinsfile nuevo que está en la carpeta raíz del frontend, el cual contiene el stage "SonarQube Analysis" para realizar el análisis
+
+```groovy
+stage('SonarQube Analysis') {
+    steps {
+        dir('deployment/devsecops-prestabanco-frontend') {
+            withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONARQUBE_TOKEN')]) {
+                withSonarQubeEnv('sonarqube local') {
+                    sh '''
+                        npx sonar-scanner \
+                          -Dsonar.projectKey=prestabanco-frontend \
+                          -Dsonar.projectName="PrestaBanco Frontend" \
+                          -Dsonar.sources=src \
+                          -Dsonar.host.url=http://sonarqube:9000 \
+                          -Dsonar.login=$SONARQUBE_TOKEN
+                    '''
+                }
+            }
+        }
+    }
+}
+```
+
+---
+
+
+### 9.7 Ejecutar el pipeline
+
+```bash
+# Ejecuta el pipeline manualmente desde Jenkins
+# Verifica el análisis en http://localhost:9000 que será creado con el projectName establecido en el stage de SonarQube Analysis
+```
